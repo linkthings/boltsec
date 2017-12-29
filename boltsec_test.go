@@ -6,8 +6,8 @@ import (
 )
 
 type Article struct {
-	ID     		string	`json:"id"`
-	Title 		string	`json:"title"`
+	ID    string `json:"id"`
+	Title string `json:"title"`
 }
 
 func ExampleNewDBManager() {
@@ -27,22 +27,22 @@ func ExampleNewDBManager() {
 
 	resNew := new(Article)
 	if err = json.Unmarshal(bytes, resNew); err != nil {
-        // handle the error
-    }
+		// handle the error
+	}
 }
 
-func TestDBMCreate(t * testing.T) {
+func TestDBMCreate(t *testing.T) {
 	var err error
 	bucketName := "article"
 
 	dbm, err := NewDBManager("test.dat", "example", "secret", false, []string{bucketName})
 
 	data := Article{
-		ID: "ID-0001", 
-		Title: "input with more than 16 characters", 
+		ID:    "ID-0001",
+		Title: "input with more than 16 characters",
 	}
 
-	if err=dbm.Save(bucketName, data.ID, data); err != nil {
+	if err = dbm.Save(bucketName, data.ID, data); err != nil {
 		t.Errorf("TestDBMCreate save data return err: %s", err)
 	}
 
@@ -53,16 +53,16 @@ func TestDBMCreate(t * testing.T) {
 
 	resNew := new(Article)
 	if err = json.Unmarshal(bytes, resNew); err != nil {
-        t.Errorf("json.Unmarshal return err: %s", err)
-    }
+		t.Errorf("json.Unmarshal return err: %s", err)
+	}
 
-    if resNew.Title != data.Title {
-    	t.Errorf("returned Title is not equal: new:%s, org: %s", resNew.Title, data.Title)
-    }
+	if resNew.Title != data.Title {
+		t.Errorf("returned Title is not equal: new:%s, org: %s", resNew.Title, data.Title)
+	}
 
-    if err=dbm.Delete(bucketName, data.ID); err != nil {
-    	t.Errorf("TestDBMCreate Delete return err: %s", err)
-    }
+	if err = dbm.Delete(bucketName, data.ID); err != nil {
+		t.Errorf("TestDBMCreate Delete return err: %s", err)
+	}
 
 	return
 }
@@ -74,12 +74,12 @@ func BenchmarkDBMOps(b *testing.B) {
 	dbm, err := NewDBManager("test.dat", "example", "secret", false, []string{bucketName})
 
 	data := Article{
-		ID: "ID-0001", 
-		Title: "input with more than 16 characters", 
+		ID:    "ID-0001",
+		Title: "input with more than 16 characters",
 	}
 
-    for n := 0; n < b.N; n++ {
-		if err=dbm.Save(bucketName, data.ID, data); err != nil {
+	for n := 0; n < b.N; n++ {
+		if err = dbm.Save(bucketName, data.ID, data); err != nil {
 			b.Errorf("TestDBMCreate save data return err: %s", err)
 		}
 
@@ -90,17 +90,17 @@ func BenchmarkDBMOps(b *testing.B) {
 
 		resNew := new(Article)
 		if err = json.Unmarshal(bytes, resNew); err != nil {
-	        b.Errorf("json.Unmarshal return err: %s", err)
-	    }
+			b.Errorf("json.Unmarshal return err: %s", err)
+		}
 
-	    if resNew.Title != data.Title {
-	    	b.Errorf("returned Title is not equal: new:%s, org: %s", resNew.Title, data.Title)
-	    }
+		if resNew.Title != data.Title {
+			b.Errorf("returned Title is not equal: new:%s, org: %s", resNew.Title, data.Title)
+		}
 
-	    if err=dbm.Delete(bucketName, data.ID); err != nil {
-	    	b.Errorf("TestDBMCreate Delete return err: %s", err)
-	    }
-    }
+		if err = dbm.Delete(bucketName, data.ID); err != nil {
+			b.Errorf("TestDBMCreate Delete return err: %s", err)
+		}
+	}
 }
 
 func BenchmarkDBMOpsBatchMode(b *testing.B) {
@@ -110,12 +110,12 @@ func BenchmarkDBMOpsBatchMode(b *testing.B) {
 	dbm, err := NewDBManager("test.dat", "example", "", true, []string{bucketName})
 
 	data := Article{
-		ID: "ID-0001", 
-		Title: "input with more than 16 characters", 
+		ID:    "ID-0001",
+		Title: "input with more than 16 characters",
 	}
 
-    for n := 0; n < b.N; n++ {
-		if err=dbm.Save(bucketName, data.ID, data); err != nil {
+	for n := 0; n < b.N; n++ {
+		if err = dbm.Save(bucketName, data.ID, data); err != nil {
 			b.Errorf("TestDBMCreate save data return err: %s", err)
 		}
 
@@ -126,21 +126,20 @@ func BenchmarkDBMOpsBatchMode(b *testing.B) {
 
 		resNew := new(Article)
 		if err = json.Unmarshal(bytes, resNew); err != nil {
-	        b.Errorf("json.Unmarshal return err: %s", err)
-	    }
+			b.Errorf("json.Unmarshal return err: %s", err)
+		}
 
-	    if resNew.Title != data.Title {
-	    	b.Errorf("returned Title is not equal: new:%s, org: %s", resNew.Title, data.Title)
-	    }
+		if resNew.Title != data.Title {
+			b.Errorf("returned Title is not equal: new:%s, org: %s", resNew.Title, data.Title)
+		}
 
-	    if err=dbm.Delete(bucketName, data.ID); err != nil {
-	    	b.Errorf("TestDBMCreate Delete return err: %s", err)
-	    }
-    }
+		if err = dbm.Delete(bucketName, data.ID); err != nil {
+			b.Errorf("TestDBMCreate Delete return err: %s", err)
+		}
+	}
 
-    dbm.SetBatchMode(false)
+	dbm.SetBatchMode(false)
 }
-
 
 func BenchmarkDBMOpsNoEncryption(b *testing.B) {
 	var err error
@@ -149,12 +148,12 @@ func BenchmarkDBMOpsNoEncryption(b *testing.B) {
 	dbm, err := NewDBManager("test.dat", "example", "", false, []string{bucketName})
 
 	data := Article{
-		ID: "ID-0001", 
-		Title: "input with more than 16 characters", 
+		ID:    "ID-0001",
+		Title: "input with more than 16 characters",
 	}
 
-    for n := 0; n < b.N; n++ {
-		if err=dbm.Save(bucketName, data.ID, data); err != nil {
+	for n := 0; n < b.N; n++ {
+		if err = dbm.Save(bucketName, data.ID, data); err != nil {
 			b.Errorf("TestDBMCreate save data return err: %s", err)
 		}
 
@@ -165,16 +164,15 @@ func BenchmarkDBMOpsNoEncryption(b *testing.B) {
 
 		resNew := new(Article)
 		if err = json.Unmarshal(bytes, resNew); err != nil {
-	        b.Errorf("json.Unmarshal return err: %s", err)
-	    }
+			b.Errorf("json.Unmarshal return err: %s", err)
+		}
 
-	    if resNew.Title != data.Title {
-	    	b.Errorf("returned Title is not equal: new:%s, org: %s", resNew.Title, data.Title)
-	    }
+		if resNew.Title != data.Title {
+			b.Errorf("returned Title is not equal: new:%s, org: %s", resNew.Title, data.Title)
+		}
 
-	    if err=dbm.Delete(bucketName, data.ID); err != nil {
-	    	b.Errorf("TestDBMCreate Delete return err: %s", err)
-	    }
-    }
+		if err = dbm.Delete(bucketName, data.ID); err != nil {
+			b.Errorf("TestDBMCreate Delete return err: %s", err)
+		}
+	}
 }
-

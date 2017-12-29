@@ -4,17 +4,20 @@ db operations such as GetOne, GetByPrefix, GetKeyList, Save, Delete and etc.
 
 Boltdb file is always open in the file system unless the DB.Close() is called, which cause inconvenience 
 if you want to do some file operations to the db file while the program is running. This package provides the parameter: batchMode to 
-control whether to close the db after each db operation, this could reduce a certain performance but could be a useful feature.
+control whether to close the db after each db operation, this has performance impact but could be a useful feature.
 
 ## Features
 1. [x] Support AES to encrypt and decrypt the values
 1. [x] Batch mode option to control whether to close the db after each db operation 
 1. [x] Initialize db file and cryptor
 
-## Performance 
+## Performance
+The below is the benchmark data for the DB related operations.
+```golang
 BenchmarkDBMOps-8               	    2000	   1114202 ns/op
 BenchmarkDBMOpsBatchMode-8      	    5000	    383995 ns/op
 BenchmarkDBMOpsNoEncryption-8   	    1000	   1029510 ns/op
+```
 
 ## LICENSE
 This project is under license [MIT](LICENSE)

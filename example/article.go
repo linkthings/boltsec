@@ -20,36 +20,36 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.*/
 
-// A sample code to describe how to use the boltsec and use json.Unmarshal to 
-// convert the []byte values into Article object 
+// A sample code to describe how to use the boltsec and use json.Unmarshal to
+// convert the []byte values into Article object
 package example
 
 import (
-	"time"
-	"encoding/json"
-	"sort"
-	"fmt"
-	"errors"
-	"math/rand"	
-	"log"
-	"os"
 	"boltsec"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"log"
+	"math/rand"
+	"os"
+	"sort"
+	"time"
 )
 
 var Logger = log.New(os.Stdout, "[ArticleManager] ", log.LstdFlags)
 
 type Article struct {
-	ID     		string	`json:"id"`
-	Name 		string	`json:"title"`
-	Tags 	 [] string 	`json:"tags"`
-	Content     string `json:"content"`
-	ContentToMark string `json:"contentToMark"`
-	CreatedAt 	time.Time  `json:"createdAt"`
-	UpdatedAt	time.Time  `json:"updatedAt"`
+	ID            string    `json:"id"`
+	Name          string    `json:"title"`
+	Tags          []string  `json:"tags"`
+	Content       string    `json:"content"`
+	ContentToMark string    `json:"contentToMark"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
 type ArticleSearch struct {
-	Keywords 	 	string 	`json:"keywords"`
+	Keywords string `json:"keywords"`
 }
 
 type ArticleSortByUpdateTime []*Article
@@ -59,19 +59,19 @@ func (a ArticleSortByUpdateTime) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ArticleSortByUpdateTime) Less(i, j int) bool { return a[i].UpdatedAt.After(a[j].UpdatedAt) }
 
 type ArticleManager struct {
-	dbm * boltsec.DBManager
-	bucket string
+	dbm           *boltsec.DBManager
+	bucket        string
 	articlePrefix string
 }
 
-func NewArticleManager(name, fullpath, secret string)(* ArticleManager, error){
+func NewArticleManager(name, fullpath, secret string) (*ArticleManager, error) {
 	dbm, err := boltsec.NewDBManager(name, fullpath, secret, false, []string{"al-article"})
-	var am * ArticleManager
+	var am *ArticleManager
 	if dbm != nil {
 		am = &ArticleManager{
-			dbm: dbm, 
-			bucket: "al-article", 
-			articlePrefix : "a-",
+			dbm:           dbm,
+			bucket:        "al-article",
+			articlePrefix: "a-",
 		}
 	}
 
@@ -79,31 +79,30 @@ func NewArticleManager(name, fullpath, secret string)(* ArticleManager, error){
 	return am, err
 }
 
-func (am * ArticleManager) NewArticle (name, content, contentToMark string, tags [] string) (* Article, error) {
-	article := & Article{
-		Name: name,
-		Content: content,
+func (am *ArticleManager) NewArticle(name, content, contentToMark string, tags []string) (*Article, error) {
+	article := &Article{
+		Name:          name,
+		Content:       content,
 		ContentToMark: contentToMark,
-		Tags: tags,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		Tags:          tags,
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
 	}
 
 	err := am.Save(article)
-	return article, err 
+	return article, err
 }
 
-
-func (am * ArticleManager) Seek() (results []*Article, err error) {
+func (am *ArticleManager) Seek() (results []*Article, err error) {
 	_func := "Seek"
 	if am == nil || am.dbm == nil {
-		return 
+		return
 	}
 	results = make([]*Article, 0)
 
 	var byteResults [][]byte
 
-	if byteResults, err = am.dbm.GetByPrefix(am.bucket,am.articlePrefix); err != nil {
+	if byteResults, err = am.dbm.GetByPrefix(am.bucket, am.articlePrefix); err != nil {
 		Logger.Printf("%s fsm.dbm.GetByPrefix return err: %s", _func, err)
 		return nil, err
 	}
@@ -111,10 +110,10 @@ func (am * ArticleManager) Seek() (results []*Article, err error) {
 	for _, iter := range byteResults {
 		resNew := new(Article)
 		if err = json.Unmarshal([]byte(iter), resNew); err != nil {
-	        Logger.Printf("%s json.Unmarshal return err: %s", _func, err)
-	    } else {
-	    	results = append(results, resNew)
-	    }
+			Logger.Printf("%s json.Unmarshal return err: %s", _func, err)
+		} else {
+			results = append(results, resNew)
+		}
 	}
 
 	sort.Sort(ArticleSortByUpdateTime(results))
@@ -122,12 +121,12 @@ func (am * ArticleManager) Seek() (results []*Article, err error) {
 	return
 }
 
-func (am * ArticleManager)GetByID(id string) (result *Article, err error) {
+func (am *ArticleManager) GetByID(id string) (result *Article, err error) {
 	var _func = "GetByID"
 	if id == "" {
 		return nil, errors.New("id is empty")
 	}
-	
+
 	var key string
 	key = fmt.Sprintf("%s%s", am.articlePrefix, id)
 	Logger.Printf("%s get using key %s", _func, key)
@@ -137,13 +136,13 @@ func (am * ArticleManager)GetByID(id string) (result *Article, err error) {
 
 	result = new(Article)
 	if err = json.Unmarshal([]byte(byt), result); err != nil {
-        Logger.Printf("%s json.Unmarshal[%s] return err: %s", _func, id, err)
-    }
+		Logger.Printf("%s json.Unmarshal[%s] return err: %s", _func, id, err)
+	}
 
 	return
 }
 
-func (am * ArticleManager) Save(record * Article) error {
+func (am *ArticleManager) Save(record *Article) error {
 	if record == nil {
 		return errors.New("record is nil")
 	}
@@ -157,12 +156,12 @@ func (am * ArticleManager) Save(record * Article) error {
 	return am.dbm.Save(am.bucket, key, record)
 }
 
-func (am * ArticleManager) Update(record * Article) error {
+func (am *ArticleManager) Update(record *Article) error {
 	if record == nil || record.ID == "0" {
 		return errors.New("record is nil")
 	}
 
-	var oldRecord * Article
+	var oldRecord *Article
 	var err error
 
 	if oldRecord, err = am.GetByID(record.ID); err != nil {
@@ -175,7 +174,7 @@ func (am * ArticleManager) Update(record * Article) error {
 	return am.Save(record)
 }
 
-func (am * ArticleManager) Delete(id string) error {
+func (am *ArticleManager) Delete(id string) error {
 	if id == "" {
 		return boltsec.ErrKeyInvalid
 	}
@@ -186,14 +185,14 @@ func (am * ArticleManager) Delete(id string) error {
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 func InitRand() {
-    rand.Seed(time.Now().UnixNano())
+	rand.Seed(time.Now().UnixNano())
 }
 
 func RandStringRunes(n int) string {
-    b := make([]rune, n)
+	b := make([]rune, n)
 
-    for i := range b {
-        b[i] = letterRunes[rand.Intn(len(letterRunes))]
-    }
-    return string(b)
+	for i := range b {
+		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+	return string(b)
 }

@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestArticleManager(t * testing.T) {
+func TestArticleManager(t *testing.T) {
 	var err error
 
 	am, err := NewArticleManager("am.dat", "", "amsecret")
@@ -26,7 +26,7 @@ func TestArticleManager(t * testing.T) {
 		t.Errorf("GetByID return err: %s", err)
 	}
 
-	if article.Name != retRecord.Name ||  article.Content != retRecord.Content {
+	if article.Name != retRecord.Name || article.Content != retRecord.Content {
 		t.Errorf("GetByID returned values are not equal")
 	}
 
