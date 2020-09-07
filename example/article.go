@@ -25,7 +25,7 @@ SOFTWARE.*/
 package example
 
 import (
-	"boltsec"
+	"github.com/linkthings/boltsec"
 	"encoding/json"
 	"errors"
 	"fmt"
