@@ -8,7 +8,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/boltdb/bolt"
+	bolt "go.etcd.io/bbolt"
 	"log"
 	"os"
 	"path/filepath"
