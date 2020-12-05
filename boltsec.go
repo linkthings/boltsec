@@ -6,12 +6,12 @@ package boltsec
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
-	bolt "go.etcd.io/bbolt"
 	"log"
 	"os"
 	"path/filepath"
+
+	bolt "go.etcd.io/bbolt"
 )
 
 type boltsecDB struct {
@@ -22,7 +22,7 @@ type boltsecTx struct {
 	*bolt.Tx
 }
 
-// The DBManager struct, all fields are not needed to be accessed by other packages
+// DBManager struct, all fields are not needed to be accessed by other packages
 type DBManager struct {
 	name      string
 	path      string
@@ -32,6 +32,7 @@ type DBManager struct {
 	batchMode bool
 	cryptor   *aesCryptor
 	db        *boltsecDB
+	//marshal   Marshaller.Marshal
 }
 
 var Debug = false
@@ -44,7 +45,7 @@ var (
 	ErrKeyInvalid      = errors.New("invalid key or key is nil")
 )
 
-// The main function to initialize the the DB manager for all DB related operations
+// NewDBManager is the main function to initialize the the DB manager for all DB related operations
 // 	name: the db file name, such as mydb.dat, mytest.db
 // 	path: the db file's path, can be "" or any other director
 // 	secret: the secret value if you want to encrypt the values; if you don't want to encrypt the data, simply put it as ""
@@ -118,7 +119,7 @@ func (dbm *DBManager) SetBatchMode(mode bool) {
 	}
 }
 
-// This function creates the db file if it doesn't exist, and also initialize the buckets
+// openDB function creates the db file if it doesn't exist, and also initialize the buckets
 func (dbm *DBManager) openDB() (err error) {
 	if dbm.batchMode && dbm.db != nil {
 		return
@@ -149,7 +150,7 @@ func (dbm *DBManager) openDB() (err error) {
 	return
 }
 
-// The closeDB function closes the db when the dbm.db is not nil and the batchmode is false.
+// closeDB function closes the db when the dbm.db is not nil and the batchmode is false.
 // When the dbm batchmode is true, please set it to be false in order to close the DB.
 func (dbm *DBManager) closeDB() {
 	if !dbm.batchMode && dbm.db != nil {
@@ -160,7 +161,7 @@ func (dbm *DBManager) closeDB() {
 	return
 }
 
-// The view function is to retrieve the records
+// view function is to retrieve the records
 func (db *boltsecDB) view(fn func(*boltsecTx) error) error {
 	wrapper := func(tx *bolt.Tx) error {
 		return fn(&boltsecTx{tx})
@@ -168,7 +169,7 @@ func (db *boltsecDB) view(fn func(*boltsecTx) error) error {
 	return db.DB.View(wrapper)
 }
 
-// The update function applies changes to the database. There can be only one Update at a time.
+// update function applies changes to the database. There can be only one Update at a time.
 func (db *boltsecDB) update(fn func(*boltsecTx) error) error {
 	wrapper := func(tx *bolt.Tx) error {
 		return fn(&boltsecTx{tx})
@@ -176,7 +177,7 @@ func (db *boltsecDB) update(fn func(*boltsecTx) error) error {
 	return db.DB.Update(wrapper)
 }
 
-// The GetByPrefix function returns the byte arrays for those records matched with specified Prefix. If the secret is set,
+// GetByPrefix function returns the byte arrays for those records matched with specified Prefix. If the secret is set,
 // the function returns the decrypted content.
 func (dbm *DBManager) GetByPrefix(bucket, prefix string) ([][]byte, error) {
 	var err error
@@ -224,7 +225,7 @@ func (dbm *DBManager) GetByPrefix(bucket, prefix string) ([][]byte, error) {
 	return results, err
 }
 
-// The GetKeyList function returns the string array for keys with specified Prefix.
+// GetKeyList function returns the string array for keys with specified Prefix.
 func (dbm *DBManager) GetKeyList(bucket, prefix string) ([]string, error) {
 	var err error
 	var results []string
@@ -258,7 +259,7 @@ func (dbm *DBManager) GetKeyList(bucket, prefix string) ([]string, error) {
 	return results, err
 }
 
-// The GetOne function returns the first record containing the key, If the secret is set,
+// GetOne function returns the first record containing the key, If the secret is set,
 // the function returns the decrypted content.
 func (dbm *DBManager) GetOne(bucket, key string) ([]byte, error) {
 	var err error
@@ -311,9 +312,9 @@ func (dbm *DBManager) GetOne(bucket, key string) ([]byte, error) {
 	return result, nil
 }
 
-// The Save function stores the record into the db file. If the secret value is set, the function
+// Save function stores the record into the db file. If the secret value is set, the function
 // encrypts the content before storing into the db.
-func (dbm *DBManager) Save(bucket, key string, data interface{}) error {
+func (dbm *DBManager) Save(bucket, key string, data []byte) error {
 	var err error
 
 	if err = dbm.openDB(); err != nil {
@@ -329,13 +330,9 @@ func (dbm *DBManager) Save(bucket, key string, data interface{}) error {
 		var err error
 		bkt := tx.Bucket([]byte(bucket))
 
-		value, err := json.Marshal(data)
-		if err != nil {
-			return err
-		}
 		if dbm.cryptor != nil {
 			//encrypt the content before store in the db
-			enc, err := dbm.cryptor.encrypt(value)
+			enc, err := dbm.cryptor.encrypt(data)
 			if err != nil {
 				return errors.New("Decrypt error from db")
 			}
@@ -344,7 +341,7 @@ func (dbm *DBManager) Save(bucket, key string, data interface{}) error {
 				return err
 			}
 		} else {
-			if err = bkt.Put([]byte(key), value); err != nil {
+			if err = bkt.Put([]byte(key), data); err != nil {
 				return err
 			}
 		}
@@ -355,7 +352,7 @@ func (dbm *DBManager) Save(bucket, key string, data interface{}) error {
 	return dbm.db.update(save)
 }
 
-// The Delete function deletes the record specified by the key.
+// Delete function deletes the record specified by the key.
 func (dbm *DBManager) Delete(bucket, key string) error {
 	var err error
 

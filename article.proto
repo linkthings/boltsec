@@ -1,0 +1,9 @@
+// protoc -I=. --go_out=. *.proto
+
+syntax = "proto3";
+package boltsec;
+
+message ProtobufArticle {
+    string ID = 1;
+    string Title = 2;
+}
